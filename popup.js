@@ -197,10 +197,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // AGENT: COPY VARIATIONS (ChatGPT - PRO Feature)
-    const generateVariationsBtn = document.getElementById('generate-variations-btn');
-    const generatedVariationsOutput = document.getElementById('generated-variations-output');
-    const generatedVariationsOutputBox = document.getElementById('generated-variations-output-box');
-
     generateVariationsBtn.addEventListener('click', async () => {
         const contentToVary = appState.generatedContent || document.getElementById('content-prompt').value;
         if (!contentToVary) {

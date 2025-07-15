@@ -76,15 +76,20 @@ function extractInstagramProfileData() {
         }
     }
 
-    // Recent Posts (images/videos) and their captions (if available)
+    // Recent Posts (images/videos) and their captions
     const postLinks = document.querySelectorAll('article a[href^="/p/"]');
+    const recent_captions = [];
     for (let i = 0; i < Math.min(postLinks.length, 9); i++) { // Get up to 9 recent posts
       const img = postLinks[i].querySelector('img');
-      if (img && img.src) {
-        recentPosts.push(img.src);
-        // TODO: Implement extraction of post captions here if needed for more detailed analysis
-        // This would require navigating to the post page or finding the caption element on the profile page.
-        // For now, emojis and hashtags are primarily extracted from the bio.
+      if (img) {
+        if(img.src) recentPosts.push(img.src);
+        if(img.alt) {
+            // The alt text often contains the full caption. We remove the parts that are not the caption.
+            let caption = img.alt.replace("Pode ser uma imagem de ", "").replace("A imagem pode conter ", "").split('\n')[0].trim();
+            recent_captions.push(caption);
+            allExtractedEmojis = allExtractedEmojis.concat(extractEmojis(caption));
+            allExtractedHashtags = allExtractedHashtags.concat(extractHashtags(caption));
+        }
       }
     }
 
@@ -100,6 +105,7 @@ function extractInstagramProfileData() {
     followers: followers,
     following: following,
     recent_posts: recentPosts,
+    recent_captions: recent_captions, // Added captions
     extracted_emojis: [...new Set(allExtractedEmojis)], // Ensure unique emojis across all sources
     extracted_hashtags: [...new Set(allExtractedHashtags)] // Ensure unique hashtags across all sources
   };

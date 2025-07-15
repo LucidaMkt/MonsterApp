@@ -1,206 +1,230 @@
 
 document.addEventListener('DOMContentLoaded', function () {
-  // --- CONFIGURAÇÕES ---
-  const API_BASE_URL = "https://monsterapp-backend.onrender.com"; // URL do backend no Render
+    // --- DOM ELEMENTS ---
+    const loginScreen = document.getElementById('login-screen');
+    const mainContent = document.getElementById('main-content');
+    const loginButton = document.getElementById('login-with-google-btn');
+    const upgradeProBtn = document.getElementById('upgrade-pro-btn');
 
-  // --- STATE MANAGEMENT ---
-  const appState = {
-    profileAnalysis: null,
-    generatedContent: '',
-    isLoading: false,
-  };
+    // Abas e Botões
+    const analyzeProfileBtn = document.getElementById('analyze-profile');
+    const generateContentBtn = document.getElementById('generate-content');
+    const generateImageBtn = document.getElementById('generate-image');
+    const researchHashtagsBtn = document.getElementById('research-hashtags-btn');
+    const suggestTopicsBtn = document.getElementById('suggest-topics-btn');
 
-  // --- DOM ELEMENTS ---
-  const navButtons = document.querySelectorAll('.nav-button');
-  const tabContents = document.querySelectorAll('.tab-content');
-  const settingsBtn = document.getElementById('settings-btn');
+    // Saídas e Entradas
+    const profileAnalysisOutput = document.getElementById('profile-analysis-output');
+    const generatedContentOutput = document.getElementById('generated-content-output');
+    const suggestedTopicsOutput = document.getElementById('suggested-topics-output');
+    const suggestedTopicsOutputBox = document.getElementById('suggested-topics-output-box');
+    const generatedVariationsOutput = document.getElementById('generated-variations-output');
+    const generatedVariationsOutputBox = document.getElementById('generated-variations-output-box');
+    const hashtagResearchOutput = document.getElementById('hashtag-research-output');
+    const generatedImageOutput = document.getElementById('generated-image-output');
+    const imagePlaceholder = document.getElementById('image-placeholder');
 
-  // Abas e Botões
-  const analyzeProfileBtn = document.getElementById('analyze-profile');
-  const generateContentBtn = document.getElementById('generate-content');
-  const generateImageBtn = document.getElementById('generate-image');
-  const researchHashtagsBtn = document.getElementById('research-hashtags-btn');
-  
-  // Saídas e Entradas
-  const profileAnalysisOutput = document.getElementById('profile-analysis-output');
-  const generatedContentOutput = document.getElementById('generated-content-output');
-  const hashtagResearchOutput = document.getElementById('hashtag-research-output');
-  const generatedImageOutput = document.getElementById('generated-image-output');
-  const imagePlaceholder = document.getElementById('image-placeholder');
-  
-  // --- HELPER FUNCTIONS ---
-  const setLoading = (button, isLoading) => {
-    appState.isLoading = isLoading;
-    if (button) {
-      button.disabled = isLoading;
-      if (isLoading) {
-        button.dataset.originalText = button.innerHTML;
-        button.innerHTML = '<span class="loader"></span>';
-      } else {
-        button.innerHTML = button.dataset.originalText;
+    // Competitor Analysis Elements
+    const competitorUsernameInput = document.getElementById('competitor-username');
+    const competitorBioInput = document.getElementById('competitor-bio');
+    const competitorFollowersInput = document.getElementById('competitor-followers');
+    const competitorFollowingInput = document.getElementById('competitor-following');
+    const competitorPostsInput = document.getElementById('competitor-posts');
+    const competitorRecentCaptionsInput = document.getElementById('competitor-recent-captions');
+    const analyzeCompetitorBtn = document.getElementById('analyze-competitor-btn');
+    const competitorAnalysisOutput = document.getElementById('competitor-analysis-output');
+
+    // --- AUTHENTICATION LOGIC ---
+    const handleLogin = () => {
+        chrome.runtime.sendMessage({ action: 'initiateOAuth', platform: 'google' }, async (response) => {
+            if (response && response.success) {
+                // O background script nos deu o token do Google. Agora, enviamos para o nosso backend.
+                try {
+                    const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (appState.authToken) {
+        headers['Authorization'] = `Bearer ${appState.authToken}`;
       }
-    }
-  };
 
-  const navigateToTab = (tabName) => {
-    navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabName));
-    tabContents.forEach(content => content.classList.toggle('active', content.id === tabName));
-  };
-
-  // --- API CALLS ---
-  const callApi = async (endpoint, body, buttonToLoad) => {
-    setLoading(buttonToLoad, true);
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(`${apiUrl}${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify(body),
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
-    } finally {
-      setLoading(buttonToLoad, false);
-    }
-  };
-
-  // --- NAVIGATION ---
-  navButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      if (appState.isLoading) return;
-      navigateToTab(button.dataset.tab);
-    });
-  });
-
-  settingsBtn.addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
-  });
-
-  // --- AGENT: PROFILE ANALYZER ---
-  analyzeProfileBtn.addEventListener('click', () => {
-    setLoading(analyzeProfileBtn, true);
-    profileAnalysisOutput.textContent = 'Analyzing profile on the current page...';
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        files: ['content.js']
-      }, () => {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'collectProfileData' }, (response) => {
-          setLoading(analyzeProfileBtn, false);
-          if (chrome.runtime.lastError) {
-            profileAnalysisOutput.textContent = `Error: ${chrome.runtime.lastError.message}`;
-            return;
-          }
-          if (response && response.success) {
-            appState.profileAnalysis = response.data;
-            let outputText = `📊 **Profile Analysis**
-`;
-            outputText += `--------------------
-`;
-            outputText += `**Platform:** ${response.data.platform}
-`;
-            outputText += `**Username:** ${response.data.username}
-`;
-            outputText += `**Bio:** ${response.data.bio || 'Not found.'}
-`;
-            profileAnalysisOutput.textContent = outputText;
-            navigateToTab('content-generator'); // Move to the next logical step
-          } else {
-            profileAnalysisOutput.textContent = `Error: ${response ? response.message : 'Could not collect profile data.'}`;
-          }
+                    const data = await backendResponse.json();
+                    if (data.access_token) {
+                        // Login bem-sucedido! Salva nosso token de API e atualiza a UI.
+                        chrome.storage.local.set({ authToken: data.access_token }, () => {
+                            appState.authToken = data.access_token;
+                            showMainContent();
+                        });
+                    } else {
+                        throw new Error(data.detail || 'Falha ao obter token da API.');
+                    }
+                } catch (error) {
+                    console.error('Erro de login no backend:', error);
+                    showLoginScreen(); // Mostra a tela de login novamente em caso de erro
+                }
+            } else {
+                console.error('Falha na autenticação com o Google:', response.message);
+                showLoginScreen();
+            }
         });
-      });
+    };
+
+    const showLoginScreen = () => {
+        loginScreen.style.display = 'block';
+        mainContent.style.display = 'none';
+    };
+
+    const showMainContent = () => {
+        loginScreen.style.display = 'none';
+        mainContent.style.display = 'block';
+        // Aqui você pode carregar os dados do usuário, etc.
+    };
+
+    // --- INITIALIZATION ---
+    const initializeApp = async () => {
+        // 1. Pega a URL da API (desenvolvimento ou produção)
+        appState.apiUrl = await new Promise(resolve => {
+            chrome.storage.local.get('api_url', result => resolve(result.api_url || 'https://monsterapp-backend.onrender.com'));
+        });
+
+        // 2. Verifica se já temos um token de autenticação
+        chrome.storage.local.get('authToken', (result) => {
+            if (result.authToken) {
+                appState.authToken = result.authToken;
+                // TODO: Adicionar uma verificação para ver se o token ainda é válido
+                showMainContent();
+            } else {
+                showLoginScreen();
+            }
+        });
+    };
+
+    // --- EVENT LISTENERS ---
+    loginButton.addEventListener('click', handleLogin);
+
+    upgradeProBtn.addEventListener('click', async () => {
+        try {
+            // Hardcoded for now, but should be dynamic based on Stripe product/price IDs
+            const PRICE_ID = "price_12345"; // Substitua pelo seu Price ID do Stripe
+            const successUrl = chrome.runtime.getURL('popup.html?success=true');
+            const cancelUrl = chrome.runtime.getURL('popup.html?canceled=true');
+
+            const response = await callApi('/create-checkout-session', {
+                price_id: PRICE_ID,
+                success_url: successUrl,
+                cancel_url: cancelUrl,
+            }, upgradeProBtn);
+
+            if (response.checkout_url) {
+                chrome.tabs.create({ url: response.checkout_url });
+            } else {
+                throw new Error("URL de checkout não recebida.");
+            }
+        } catch (error) {
+            console.error("Erro ao iniciar checkout do Stripe:", error);
+            alert(`Erro ao iniciar checkout: ${error.message}`);
+        }
     });
-  });
 
-  // --- AGENT: CONTENT GENERATOR (ChatGPT) ---
-  generateContentBtn.addEventListener('click', async () => {
-    const prompt = document.getElementById('content-prompt').value;
-    const tone = document.getElementById('tone').value;
-    const niche = document.getElementById('niche').value;
+    // AGENT: COMPETITOR ANALYZER (Gemini - PRO Feature)
+    analyzeCompetitorBtn.addEventListener('click', async () => {
+        const competitorData = {
+            username: competitorUsernameInput.value,
+            bio: competitorBioInput.value,
+            followers: competitorFollowersInput.value,
+            following: competitorFollowingInput.value,
+            posts: competitorPostsInput.value,
+            recent_captions: competitorRecentCaptionsInput.value.split('\n').filter(line => line.trim() !== ''),
+        };
 
-    if (!prompt && !appState.profileAnalysis) {
-      generatedContentOutput.textContent = "Please enter a prompt or analyze a profile first.";
-      return;
-    }
-    
-    generatedContentOutput.textContent = "Agent is thinking...";
-    try {
-      const requestBody = {
-        prompt: prompt || "Based on the user's profile",
-        tone: tone,
-        niche: niche,
-        profile_data: appState.profileAnalysis
-      };
-      const data = await callApi('/gerar-copy-social-media', requestBody, generateContentBtn);
-      appState.generatedContent = data.copy;
-      generatedContentOutput.textContent = data.copy;
-    } catch (error) {
-      generatedContentOutput.textContent = `Error from Content Agent: ${error.message}`;
-    }
-  });
+        if (!competitorData.username) {
+            alert("Please enter competitor's username.");
+            return;
+        }
 
-  // --- AGENT: HASHTAG RESEARCHER (Gemini) ---
-  researchHashtagsBtn.addEventListener('click', async () => {
-    const topic = document.getElementById('hashtag-topic').value;
-    if (!topic) {
-      hashtagResearchOutput.textContent = "Please provide a topic for the hashtag research.";
-      return;
-    }
+        competitorAnalysisOutput.textContent = "Analyzing competitor...";
+        try {
+            const data = await callApi('/analyze-competitor-profile', competitorData, analyzeCompetitorBtn);
+            let outputText = '🕵️ COMPETITOR ANALYSIS\n';
+            outputText += '====================\n';
+            outputText += `Username:  ${data.username}\n`;
+            outputText += `Niche:     ${data.niche_identified}\n`;
+            outputText += `Style:     ${data.content_style_analysis}\n\n`;
+            outputText += '💡 INSIGHTS\n';
+            outputText += '====================\n';
+            data.insights.forEach((s, i) => { outputText += `${i + 1}. ${s}\n`; });
 
-    hashtagResearchOutput.textContent = "Agent is researching...";
-    try {
-      const requestBody = {
-        topic: topic,
-        niche: document.getElementById('niche').value, // Re-using niche from content tab
-        profile_data: appState.profileAnalysis
-      };
-      const data = await callApi('/pesquisar-hashtags', requestBody, researchHashtagsBtn);
-      hashtagResearchOutput.textContent = data.hashtags.join(' ');
-    } catch (error) {
-      hashtagResearchOutput.textContent = `Error from Hashtag Agent: ${error.message}`;
-    }
-  });
-  
-  // --- AGENT: IMAGE GENERATOR (DALL-E) ---
-  generateImageBtn.addEventListener('click', async () => {
-    const prompt = document.getElementById('image-prompt').value;
-    if (!prompt) {
-      alert("Please describe the image you want to create.");
-      return;
-    }
+            competitorAnalysisOutput.textContent = outputText;
+        } catch (error) {
+            competitorAnalysisOutput.textContent = `Error from Competitor Analyzer: ${error.message}`;
+        }
+    });
 
-    imagePlaceholder.textContent = 'Agent is creating...';
-    generatedImageOutput.style.display = 'none';
-    imagePlaceholder.style.display = 'block';
+    // AGENT: TOPIC SUGGESTER (Gemini - PRO Feature)
+    suggestTopicsBtn.addEventListener('click', async () => {
+        const niche = document.getElementById('niche').value;
+        const competitorUsername = competitorUsernameInput.value;
 
-    try {
-      const requestBody = {
-        prompt: prompt,
-        style: document.getElementById('image-style').value,
-      };
-      const data = await callApi('/gerar-imagem', requestBody, generateImageBtn);
-      generatedImageOutput.src = data.image_url;
-      generatedImageOutput.alt = prompt;
-      generatedImageOutput.style.display = 'block';
-      imagePlaceholder.style.display = 'none';
-    } catch (error) {
-      imagePlaceholder.textContent = `Error from Image Agent: ${error.message}`;
-    }
-  });
+        if (!niche && !appState.profileAnalysis && !competitorUsername) {
+            suggestedTopicsOutput.textContent = "Please select a niche, analyze your profile, or enter competitor data.";
+            return;
+        }
 
-  // --- UTILITY BUTTONS ---
-  document.getElementById('use-generated-content').addEventListener('click', () => {
-      if (appState.generatedContent) {
-          document.getElementById('hashtag-topic').value = appState.generatedContent;
-          navigateToTab('hashtag-research');
-      } else {
-          alert("No content generated yet. Please generate content first.");
-      }
-  });
+        suggestedTopicsOutput.textContent = "Agent is brainstorming topics...";
+        suggestedTopicsOutputBox.style.display = 'block';
 
-  // Initialize with the first tab
-  navigateToTab('profile-analysis');
+        try {
+            const requestBody = {
+                niche: niche === 'autodetect' && appState.profileAnalysis ? appState.profileAnalysis.niche_identified : niche,
+                user_profile_data: appState.profileAnalysis,
+                competitor_profile_data: competitorUsername ? {
+                    username: competitorUsername,
+                    bio: competitorBioInput.value,
+                    followers: competitorFollowersInput.value,
+                    following: competitorFollowingInput.value,
+                    posts: competitorPostsInput.value,
+                    recent_captions: competitorRecentCaptionsInput.value.split('\n').filter(line => line.trim() !== ''),
+                } : null,
+            };
+            const data = await callApi('/suggest-content-topics', requestBody, suggestTopicsBtn);
+            suggestedTopicsOutput.textContent = data.topics.join('\n');
+        } catch (error) {
+            suggestedTopicsOutput.textContent = `Error from Topic Suggester: ${error.message}`;
+        }
+    });
+
+    // AGENT: COPY VARIATIONS (ChatGPT - PRO Feature)
+    const generateVariationsBtn = document.getElementById('generate-variations-btn');
+    const generatedVariationsOutput = document.getElementById('generated-variations-output');
+    const generatedVariationsOutputBox = document.getElementById('generated-variations-output-box');
+
+    generateVariationsBtn.addEventListener('click', async () => {
+        const contentToVary = appState.generatedContent || document.getElementById('content-prompt').value;
+        if (!contentToVary) {
+            alert("Please generate content first or enter a prompt.");
+            return;
+        }
+
+        generatedVariationsOutput.textContent = "Agent is generating variations...";
+        generatedVariationsOutputBox.style.display = 'block';
+
+        try {
+            const requestBody = {
+                original_copy: contentToVary,
+            };
+            const data = await callApi('/generate-copy-variations', requestBody, generateVariationsBtn);
+            generatedVariationsOutput.textContent = data.variations.map((v, i) => `${i + 1}. ${v}`).join('\n\n');
+        } catch (error) {
+            generatedVariationsOutput.textContent = `Error from Copy Variations Agent: ${error.message}`;
+        }
+    });
+
+    // ... (todos os outros event listeners para os agentes)
+
+    // Inicia a aplicação
+    initializeApp();
 });

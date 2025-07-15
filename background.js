@@ -1,5 +1,25 @@
 // background.js
 
+// 1. Gerenciamento de Ambiente (Ao Instalar/Atualizar)
+const PROD_API_URL = "https://monsterapp-backend.onrender.com";
+const DEV_API_URL = "http://127.0.0.1:8000";
+
+chrome.runtime.onInstalled.addListener(() => {
+  // Verifica se a extensão está em modo de desenvolvimento
+  chrome.management.getSelf((info) => {
+    let apiUrl = PROD_API_URL;
+    if (info.installType === 'development') {
+      apiUrl = DEV_API_URL;
+      console.log("MonsterApp: Executando em modo de DESENVOLVIMENTO. API: ", apiUrl);
+    } else {
+      console.log("MonsterApp: Executando em modo de PRODUÇÃO. API: ", apiUrl);
+    }
+    // Salva a URL da API no armazenamento local para ser usada pelo popup
+    chrome.storage.local.set({ api_url: apiUrl });
+  });
+});
+
+// 2. Listener de Mensagens Principal
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'collectProfileData') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -32,36 +52,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     });
     return true; // Indicates that sendResponse will be called asynchronously
-  } else if (request.action === 'initiateOAuth') {
-    const platform = request.platform;
-    let authUrl = '';
-    let redirectUri = chrome.identity.getRedirectURL();
-
-    // IMPORTANT: Replace with your actual client IDs and scopes
-    switch (platform) {
-      case 'google':
-        // You need to enable Google Sign-In for Chrome Extensions in Google Cloud Console
-        // and add "https://<YOUR_EXTENSION_ID>.chromiumapp.org" as an authorized redirect URI.
-        // Also, add "identity" permission to manifest.json
-        authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=476275454979-s2im0dskc3qoigf3fjie4763pu53qcgi.apps.googleusercontent.com&response_type=token&scope=email%20profile&redirect_uri=${encodeURIComponent(redirectUri)}`;
-        break;
-      case 'facebook':
-        // You need to set up a Facebook App and configure the OAuth redirect URI
-        // to "https://<YOUR_EXTENSION_ID>.chromiumapp.org".
-        // Also, add "identity" permission to manifest.json
-        authUrl = `https://www.facebook.com/v12.0/dialog/oauth?client_id=YOUR_FACEBOOK_APP_ID&redirect_uri=${encodeURIComponent(redirectUri)}&scope=email,public_profile`;
-        break;
-      case 'instagram':
-        // Instagram Basic Display API requires a different flow, often involving a server-side component.
-        // For simplicity, this example uses a placeholder. A full Instagram OAuth flow is more complex.
-        // You would typically redirect to your server, which then handles the Instagram OAuth.
-        // Also, add "identity" permission to manifest.json
-        authUrl = `https://api.instagram.com/oauth/authorize?client_id=YOUR_INSTAGRAM_APP_ID&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user_profile,user_media&response_type=code`;
-        break;
-      default:
-        sendResponse({ success: false, message: 'Unknown OAuth platform.' });
-        return false;
-    }
+  } else if (request.action === 'initiateOAuth' && request.platform === 'google') {
+    const GOOGLE_CLIENT_ID = "476275454979-s2im0dskc3qoigf3fjie4763pu53qcgi.apps.googleusercontent.com";
+    const redirectUri = chrome.identity.getRedirectURL();
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&scope=email%20profile&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     chrome.identity.launchWebAuthFlow({
       url: authUrl,
@@ -72,19 +66,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return;
       }
       if (redirectUrl) {
-        // Parse the token from the redirectUrl (for Google/Facebook implicit flow)
-        // For Instagram, you'd get a 'code' that needs to be exchanged on your backend.
-        const urlParams = new URLSearchParams(redirectUrl.split('#')[1] || redirectUrl.split('?')[1]);
+        const urlParams = new URLSearchParams(redirectUrl.substring(redirectUrl.indexOf('#') + 1));
         const accessToken = urlParams.get('access_token');
-        const code = urlParams.get('code'); // For Instagram
-
         if (accessToken) {
-          sendResponse({ success: true, token: accessToken, platform: platform });
-        } else if (code) {
-          // For Instagram, you'd send this code to your backend to exchange for an access token
-          sendResponse({ success: true, code: code, platform: platform, message: 'Code received, exchange on backend needed.' });
+          sendResponse({ success: true, token: accessToken });
         } else {
-          sendResponse({ success: false, message: 'No access token or code found in redirect URL.' });
+          sendResponse({ success: false, message: 'No access token found in redirect URL.' });
         }
       } else {
         sendResponse({ success: false, message: 'OAuth flow cancelled or failed.' });

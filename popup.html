@@ -6,7 +6,19 @@
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <div class="main-container">
+    <!-- Tela de Login (visível para usuários não autenticados) -->
+    <div id="login-screen" style="display: none; text-align: center; padding: 40px;">
+        <img src="images/logo.png" alt="MonsterApp Logo" style="width: 80px; margin-bottom: 20px;">
+        <h2>Bem-vindo ao MonsterApp</h2>
+        <p>Faça login para começar a usar os agentes de IA.</p>
+        <button id="login-with-google-btn" class="button-primary-action">
+            <img src="https://www.google.com/favicon.ico" alt="Google icon" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px;">
+            <span>Login com Google</span>
+        </button>
+    </div>
+
+    <!-- Conteúdo Principal da Extensão (visível para usuários autenticados) -->
+    <div id="main-content" class="main-container">
         <div class="sidebar">
             <div class="sidebar-header">
                 <img src="images/logo.png" alt="MonsterApp Logo">
@@ -29,6 +41,10 @@
                     <span>#️⃣</span>
                     <span>Hashtags</span>
                 </button>
+                <button class="nav-button" data-tab="competitor-analysis">
+                    <span>🕵️</span>
+                    <span>Competitor</span>
+                </button>
                 <button class="nav-button" data-tab="post-scheduler">
                     <span>🗓️</span>
                     <span>Scheduler</span>
@@ -43,6 +59,10 @@
                 </button>
             </nav>
             <div class="sidebar-footer">
+                <button class="nav-button" id="upgrade-pro-btn">
+                    <span>🚀</span>
+                    <span>Upgrade to Pro</span>
+                </button>
                 <button class="nav-button" id="settings-btn">
                     <span>⚙️</span>
                     <span>Settings</span>
@@ -91,9 +111,25 @@
                     <span>✨</span>
                     <span>Generate Content</span>
                 </button>
+                <button id="generate-variations-btn" class="button-secondary">
+                    <span>🔄</span>
+                    <span>Generate Variations</span>
+                </button>
+                <button id="suggest-topics-btn" class="button-secondary">
+                    <span>💡</span>
+                    <span>Suggest Topics</span>
+                </button>
                 <div class="output-box">
                     <h3>Generated Content:</h3>
                     <p id="generated-content-output"></p>
+                </div>
+                <div class="output-box" id="generated-variations-output-box" style="display: none;">
+                    <h3>Generated Variations:</h3>
+                    <pre id="generated-variations-output"></pre>
+                </div>
+                <div class="output-box" id="suggested-topics-output-box" style="display: none;">
+                    <h3>Suggested Topics:</h3>
+                    <pre id="suggested-topics-output"></pre>
                 </div>
             </div>
 
@@ -146,6 +182,26 @@
                 <div class="output-box">
                     <h3>Suggested Hashtags:</h3>
                     <p id="hashtag-research-output"></p>
+                </div>
+            </div>
+
+            <!-- Competitor Analysis Tab -->
+            <div id="competitor-analysis" class="tab-content">
+                <h2>Competitor Profile Analysis</h2>
+                <p>Enter competitor's profile data to get insights.</p>
+                <input type="text" id="competitor-username" placeholder="Competitor Username">
+                <textarea id="competitor-bio" placeholder="Competitor Bio (optional)"></textarea>
+                <input type="text" id="competitor-followers" placeholder="Followers (e.g., 10k)">
+                <input type="text" id="competitor-following" placeholder="Following (e.g., 500)">
+                <input type="text" id="competitor-posts" placeholder="Number of Posts (e.g., 200)">
+                <textarea id="competitor-recent-captions" placeholder="Recent Post Captions (paste a few, one per line)"></textarea>
+                <button id="analyze-competitor-btn" class="button-primary-action">
+                    <span>🕵️</span>
+                    <span>Analyze Competitor</span>
+                </button>
+                <div class="output-box">
+                    <h3>Competitor Analysis Result:</h3>
+                    <pre id="competitor-analysis-output">Enter competitor data and click 'Analyze' to get insights.</pre>
                 </div>
             </div>
 

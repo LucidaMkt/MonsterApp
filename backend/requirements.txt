@@ -45,3 +45,10 @@ urllib3==2.5.0
 uvicorn==0.35.0
 watchfiles==1.1.0
 websockets==15.0.1
+
+# Dependências para Banco de Dados e Autenticação
+sqlalchemy==2.0.31
+pysqlite3-binary==0.5.3.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==2024.1
+stripe==8.1.0

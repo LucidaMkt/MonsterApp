@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MonsterApp AI</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="MonsterApp Logo">
+                <h1>MonsterApp</h1>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-button active" data-tab="profile-analysis">
+                    <span>📊</span>
+                    <span>Analysis</span>
+                </button>
+                <button class="nav-button" data-tab="content-generator">
+                    <span>✍️</span>
+                    <span>Content</span>
+                </button>
+                <button class="nav-button" data-tab="image-generator">
+                    <span>🖼️</span>
+                    <span>Image</span>
+                </button>
+                <button class="nav-button" data-tab="hashtag-research">
+                    <span>#️⃣</span>
+                    <span>Hashtags</span>
+                </button>
+                <button class="nav-button" data-tab="post-scheduler">
+                    <span>🗓️</span>
+                    <span>Scheduler</span>
+                </button>
+                 <button class="nav-button" data-tab="analytics">
+                    <span>📈</span>
+                    <span>Analytics</span>
+                </button>
+                <button class="nav-button" data-tab="developer-tools">
+                    <span>🛠️</span>
+                    <span>Developer</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="nav-button" id="settings-btn">
+                    <span>⚙️</span>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <!-- Profile Analysis Tab -->
+            <div id="profile-analysis" class="tab-content active">
+                <h2>Profile Analysis</h2>
+                <button id="analyze-profile" class="button-primary-action">
+                    <span>🔍</span>
+                    <span>Analyze Current Profile</span>
+                </button>
+                <div class="output-box" id="profile-output-box">
+                    <h3>Analysis Result:</h3>
+                    <pre id="profile-analysis-output">Click the button to analyze the profile on the current page.</pre>
+                </div>
+            </div>
+
+            <!-- Content Generator Tab -->
+            <div id="content-generator" class="tab-content">
+                <h2>Intelligent Content Generator</h2>
+                <textarea id="content-prompt" placeholder="Describe your content idea or leave blank to use profile analysis..."></textarea>
+                <div class="options-grid">
+                    <select id="tone">
+                        <option value="casual">Casual</option>
+                        <option value="professional">Professional</option>
+                        <option value="friendly">Friendly</option>
+                        <option value="authoritative">Authoritative</option>
+                        <option value="inspirational">Inspirational</option>
+                    </select>
+                    <select id="niche">
+                        <option value="autodetect">Auto-Detect Niche</option>
+                        <option value="beauty">Beauty</option>
+                        <option value="fitness">Fitness</option>
+                        <option value="lifestyle">Lifestyle</option>
+                        <option value="gastronomy">Gastronomy</option>
+                        <option value="fashion">Fashion</option>
+                        <option value="travel">Travel</option>
+                        <option value="business">Business</option>
+                    </select>
+                </div>
+                <button id="generate-content">
+                    <span>✨</span>
+                    <span>Generate Content</span>
+                </button>
+                <div class="output-box">
+                    <h3>Generated Content:</h3>
+                    <p id="generated-content-output"></p>
+                </div>
+            </div>
+
+            <!-- Image Generator Tab -->
+            <div id="image-generator" class="tab-content">
+                <h2>AI Image Generator</h2>
+                <textarea id="image-prompt" placeholder="Describe the image you want to create..."></textarea>
+                <div class="options-grid">
+                    <select id="image-style">
+                        <option value="photorealistic">Photorealistic</option>
+                        <option value="minimalist">Minimalist</option>
+                        <option value="lifestyle">Lifestyle</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="artistic">Artistic</option>
+                    </select>
+                    <select id="image-format">
+                        <option value="1:1">Square (1:1)</option>
+                        <option value="9:16">Portrait (9:16)</option>
+                        <option value="16:9">Landscape (16:9)</option>
+                    </select>
+                </div>
+                <input type="text" id="text-overlay" placeholder="Text to overlay on image (optional)">
+                <div class="options-grid" id="text-options" style="display: none;">
+                    <select id="text-position">
+                        <option value="center">Center</option>
+                        <option value="top">Top</option>
+                        <option value="bottom">Bottom</option>
+                    </select>
+                    <input type="text" id="text-color" placeholder="Text color (e.g., #FFFFFF)">
+                </div>
+                <button id="generate-image">
+                    <span>🎨</span>
+                    <span>Generate Image</span>
+                </button>
+                <div class="output-box">
+                    <h3>Generated Image:</h3>
+                    <img id="generated-image-output" src="" alt="Generated image will appear here." style="display: none;">
+                    <p id="image-placeholder">Generated image will appear here.</p>
+                </div>
+            </div>
+
+            <!-- Hashtag Research Tab -->
+            <div id="hashtag-research" class="tab-content">
+                <h2>Advanced Hashtag Research</h2>
+                <textarea id="hashtag-topic" placeholder="Enter a topic, keyword, or paste content here..."></textarea>
+                <div class="button-group">
+                    <button id="use-generated-content" class="button-secondary">Use Generated Content</button>
+                    <button id="research-hashtags-btn"><span>🔍</span> Research</button>
+                </div>
+                <div class="output-box">
+                    <h3>Suggested Hashtags:</h3>
+                    <p id="hashtag-research-output"></p>
+                </div>
+            </div>
+
+            <!-- Post Scheduler Tab -->
+            <div id="post-scheduler" class="tab-content">
+                <h2>Post Scheduler</h2>
+                <textarea id="schedule-content" placeholder="Paste or generate content to schedule..."></textarea>
+                <div class="options-grid">
+                    <select id="schedule-platform">
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                    </select>
+                    <input type="datetime-local" id="schedule-time">
+                </div>
+                <button id="schedule-post">
+                    <span>✅</span>
+                    <span>Schedule Post</span>
+                </button>
+                <div class="output-box">
+                    <h3>Scheduler Status:</h3>
+                    <p id="schedule-status-output"></p>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <h2>Analytics</h2>
+                <button id="fetch-engagement">Fetch Engagement Metrics</button>
+                <div class="output-box">
+                    <h3>Engagement Metrics:</h3>
+                    <p id="engagement-output"></p>
+                </div>
+                <button id="fetch-best-times">Fetch Best Post Times</button>
+                <div class="output-box">
+                    <h3>Best Post Times:</h3>
+                    <p id="best-times-output"></p>
+                </div>
+            </div>
+
+            <!-- Developer Tools Tab -->
+            <div id="developer-tools" class="tab-content">
+                <h2>Developer Tools</h2>
+                <button id="fetch-api-usage">Fetch API Usage</button>
+                <div class="output-box">
+                    <h3>API Usage:</h3>
+                    <pre id="api-usage-output"></pre>
+                </div>
+                <button id="fetch-api-keys">Fetch API Keys</button>
+                 <div class="output-box">
+                    <h3>API Keys:</h3>
+                    <pre id="api-keys-output"></pre>
+                </div>
+                <button id="fetch-logs">Fetch Logs</button>
+                <div class="output-box">
+                    <h3>Logs:</h3>
+                    <pre id="logs-output"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>

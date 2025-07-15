@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MonsterApp Settings</title>
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="images/logo.png" alt="MonsterApp Logo">
+            <h1>MonsterApp Settings</h1>
+        </header>
+
+        <main>
+            <!-- User Account Integration -->
+            <section id="user-settings">
+                <h2><span class="icon">👤</span>User Account Integration</h2>
+                <p>Connect your social media accounts to allow MonsterApp to analyze your profile and manage your content directly.</p>
+                <div class="social-login-buttons">
+                    <button class="social-btn google">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo"> Connect with Google
+                    </button>
+                    <button class="social-btn facebook">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Facebook Logo"> Connect with Facebook
+                    </button>
+                    <button class="social-btn instagram">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram Logo"> Connect with Instagram
+                    </button>
+                </div>
+            </section>
+
+            <hr>
+
+            <!-- Administrator Login -->
+            <section id="admin-access">
+                <h2><span class="icon">🛠️</span>Administrator Access</h2>
+                <div id="admin-login-form">
+                    <p>For developers and administrators to configure AI provider APIs.</p>
+                    <div class="form-group">
+                        <label for="admin-user">Username</label>
+                        <input type="text" id="admin-user" placeholder="Enter admin username">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-pass">Password</label>
+                        <input type="password" id="admin-pass" placeholder="Enter admin password">
+                    </div>
+                    <button id="admin-login-btn">Login as Administrator</button>
+                    <p id="admin-error-msg" class="error-message"></p>
+                </div>
+
+                <!-- Admin API Settings Panel (hidden by default) -->
+                <div id="admin-api-panel" style="display: none;">
+                    <h3>AI Provider API Keys</h3>
+                    <p>Enter the API keys for the integrated AI services below.</p>
+                    <div class="form-group">
+                        <label for="openai-key">OpenAI API Key</label>
+                        <input type="password" id="openai-key" placeholder="sk-...">
+                    </div>
+                    <div class="form-group">
+                        <label for="another-ai-key">Another AI Service API Key</label>
+                        <input type="password" id="another-ai-key" placeholder="key-...">
+                    </div>
+                    <button id="save-api-keys-btn">Save API Keys</button>
+                    <p id="api-save-confirm" class="success-message"></p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="settings.js"></script>
+</body>
+</html>

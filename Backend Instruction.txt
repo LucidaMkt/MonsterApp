@@ -1,0 +1,202 @@
+Guia de Implementação do Backend da MonsterApp
+
+
+  Objetivo: Criar um servidor local (API) em Python que a extensão do navegador possa consultar para obter e enviar dados.
+
+
+  Tecnologias:
+   * Linguagem: Python 3.9+
+   * Framework: FastAPI (para a criação da API)
+   * Servidor: Uvicorn (servidor ASGI de alta performance para rodar o FastAPI)
+   * Validação de Dados: Pydantic (integrado ao FastAPI)
+
+  ---
+
+  Passo 1: Configuração do Ambiente de Desenvolvimento
+
+
+  A base de qualquer projeto de software sólido é um ambiente de desenvolvimento limpo e isolado. Usaremos um ambiente virtual (venv) para
+  gerenciar as dependências do projeto sem afetar o seu sistema.
+
+   1. Navegue até a pasta do backend:
+
+   1     cd "C:\Users\lucia\Meus Documentos\MonsterApp_Extension\backend"
+
+
+
+   2. Crie um ambiente virtual:
+
+   1     python -m venv venv
+
+      Isso cria uma pasta `venv` dentro do seu diretório `backend`.
+
+
+   3. Ative o ambiente virtual:
+
+   1     venv\Scripts\activate
+
+      Seu prompt de comando deverá mudar, indicando que o ambiente `venv` está ativo. Todo pacote Python que instalarmos agora ficará 
+  restrito a este ambiente.
+
+  Passo 2: Instalação das Dependências
+
+
+  Com o ambiente ativo, vamos instalar os pacotes necessários.
+
+
+   1. Instale FastAPI e Uvicorn:
+
+   1     pip install fastapi "uvicorn[standard]"
+
+       * fastapi: O framework para construir a API.
+       * uvicorn[standard]: O servidor que irá executar nossa aplicação. A opção [standard] inclui otimizações recomendadas.        
+
+   2. Atualize o arquivo `requirements.txt`:
+      É uma boa prática manter este arquivo atualizado para que outros desenvolvedores (ou você no futuro) possam recriar o ambiente
+  facilmente.
+
+
+   1     pip freeze > requirements.txt
+
+
+  Passo 3: Implementação da API em `main.py`
+
+  Agora, vamos escrever o código do nosso servidor. Abriremos o arquivo backend/main.py e o estruturaremos para ser um servidor de API
+  funcional.
+
+
+  Ponto Crítico: CORS
+  Uma extensão de navegador rodando em chrome-extension://... tentando acessar um servidor em http://localhost:8000 será bloqueada pela
+  Política de Mesma Origem (CORS) do navegador. Precisamos configurar o backend para permitir explicitamente a comunicação com a sua   
+  extensão.
+
+  Edite o arquivo `main.py` com o seguinte conteúdo:
+
+
+
+    1 # backend/main.py
+    2 
+    3 from fastapi import FastAPI
+    4 from fastapi.middleware.cors import CORSMiddleware
+    5 from pydantic import BaseModel
+    6 from typing import List
+    7 
+    8 # 1. Inicialização da Aplicação FastAPI
+    9 app = FastAPI(
+   10     title="MonsterApp API",
+   11     description="Backend para a extensão MonsterApp, gerenciando dados de monstros.",
+   12     version="1.0.0"
+   13 )
+   14 
+   15 # 2. Configuração do CORS (Cross-Origin Resource Sharing)
+   16 # ESSENCIAL para permitir que a extensão do navegador se comunique com esta API.     
+   17 origins = [
+   18     # Adicione aqui o ID da sua extensão quando souber.
+   19     # Exemplo: "chrome-extension://abcdefghijklmnoabcdefhijklmnoabc"
+   20     "*" # Usar "*" durante o desenvolvimento para permitir qualquer origem.
+   21         # Para produção, restrinja para o ID da sua extensão.
+   22 ]
+   23 
+   24 app.add_middleware(
+   25     CORSMiddleware,
+   26     allow_origins=origins,
+   27     allow_credentials=True,
+   28     allow_methods=["*"], # Permite todos os métodos (GET, POST, etc)
+   29     allow_headers=["*"], # Permite todos os cabeçalhos
+   30 )
+   31 
+   32 # 3. Modelo de Dados (usando Pydantic)
+   33 # Define a estrutura de um "Monstro". Isso garante validação automática dos dados.   
+   34 class Monster(BaseModel):
+   35     id: int
+   36     name: str
+   37     description: str
+   38     level: int
+   39 
+   40 # 4. "Banco de Dados" em memória (para fins de exemplo)
+   41 # No futuro, isso pode ser substituído por um banco de dados real (SQLite, PostgreSQL, etc.)
+   42 db: List[Monster] = [
+   43     Monster(id=1, name="Draco", description="Um dragão cuspidor de fogo.", level=15),
+   44     Monster(id=2, name="Goblin", description="Uma criatura pequena e astuta.", level=2),
+   45 ]
+   46 
+   47 # 5. Endpoints da API
+   48 
+   49 @app.get("/", tags=["Root"])
+   50 def read_root():
+   51     """Endpoint raiz para verificar se a API está online."""
+   52     return {"status": "API da MonsterApp está funcionando!"}
+   53 
+   54 @app.get("/api/monsters", response_model=List[Monster], tags=["Monsters"])
+   55 def get_all_monsters():
+   56     """Retorna a lista de todos os monstros."""
+   57     return db
+   58 
+   59 @app.post("/api/monsters", response_model=Monster, status_code=201, tags=["Monsters"])
+   60 def create_monster(monster: Monster):
+   61     """Cria um novo monstro e o adiciona à base de dados."""
+   62     db.append(monster)
+   63     return monster
+
+
+  Passo 4: Executando o Servidor Backend
+
+
+  Com o código pronto, vamos iniciar o servidor.
+
+   1. Certifique-se de que seu ambiente virtual (`venv`) ainda está ativo.
+   2. No terminal, dentro da pasta `backend`, execute:
+
+
+   1     uvicorn main:app --reload --port 8000
+
+       * main:app: Diz ao Uvicorn para procurar no arquivo main.py a variável chamada app.
+       * --reload: Reinicia o servidor automaticamente sempre que você salvar uma alteração no código. Ideal para desenvolvimento.
+       * --port 8000: Define a porta em que o servidor irá rodar.
+
+   3. Você deverá ver uma saída parecida com esta:
+
+
+   1     INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+   2     INFO:     Started reloader process [12345]
+   3     INFO:     Started server process [54321]
+   4     INFO:     Waiting for application startup.
+   5     INFO:     Application startup complete.
+
+      Seu backend está oficialmente no ar e funcional!
+
+  Passo 5: Testando e Interagindo com a API
+
+  O FastAPI gera automaticamente uma documentação interativa da sua API (usando Swagger UI). Esta é a melhor maneira de testar seus
+  endpoints.
+
+
+   1. Abra seu navegador e acesse: http://127.0.0.1:8000/docs (http://127.0.0.1:8000/docs)
+
+
+   2. Explore a documentação:
+       * Você verá os três endpoints que criamos: GET /, GET /api/monsters e POST /api/monsters.
+       * Clique no endpoint GET /api/monsters, depois em "Try it out" e "Execute". Você verá a lista de monstros (Draco e Goblin) em formato
+         JSON.
+       * Clique no endpoint POST /api/monsters, "Try it out", modifique o JSON de exemplo no corpo da requisição e clique em "Execute" para 
+         adicionar um novo monstro.
+
+  Próximos Passos (Visão de Futuro)
+
+
+  Seu backend está funcional, mas para uma aplicação de sucesso, considere:
+
+   1. Integração com o Frontend: No seu arquivo popup.js ou content.js, você usará a função fetch do JavaScript para fazer requisições para
+      http://localhost:8000/api/monsters.
+
+
+   2. Persistência de Dados: A lista db em memória é perdida toda vez que o servidor reinicia. O próximo passo lógico é integrar um banco de
+      dados como o SQLite (para simplicidade) ou PostgreSQL (para robustez) usando uma biblioteca como a SQLAlchemy.
+
+
+   3. Lógica de IA: As funcionalidades de IA (ex: gerar nomes de monstros, criar descrições, etc.) devem ser implementadas em módulos separados
+      (ex: backend/ai_services.py) e chamadas pelos seus endpoints em main.py.
+
+
+   4. Segurança: Para produção, substitua "*" na configuração do CORS pelo ID real da sua extensão. Considere adicionar autenticação (ex: chaves
+      de API) se o backend for exposto na internet.

@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Custom Color Palette */
+  --color-primary: #1e718a; /* Azul escuro */
+  --color-secondary: #3da9a5; /* Verde água */
+  --color-accent: #9361b4; /* Roxo */
+  --color-dark-purple: #5a3386; /* Roxo mais escuro */
+  --color-background-dark: #0b061a; /* Quase preto */
+  --color-text-dark: #27174c; /* Roxo muito escuro para texto */
+  --color-light-purple: #804a9d; /* Roxo claro */
+  --color-pink: #a5639e; /* Rosa */
+  --color-gray: #8c8490; /* Cinza */
+  --color-beige: #e6c4a5; /* Bege */
+
+  /* Semantic Colors */
+  --primary-color: var(--color-primary);
+  --primary-hover: var(--color-secondary);
+  --accent-color: var(--color-accent);
+  --accent-hover: var(--color-dark-purple);
+  --background-color: var(--color-beige);
+  --container-bg: #ffffff; /* Manter branco para contraste */
+  --text-color: var(--color-text-dark);
+  --muted-text-color: var(--color-gray);
+  --border-color: var(--color-light-purple);
+  --error-color: #c0392b; /* Manter vermelho padrão */
+  --success-color: #27ae60; /* Manter verde padrão */
+  
+  /* UI Metrics */
+  --font-family: 'Inter', sans-serif;
+  --border-radius: 12px;
+  --transition-speed: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  /* Neumorphic Shadows (ajustadas para a nova paleta) */
+  --shadow-light: rgba(255, 255, 255, 0.7);
+  --shadow-dark: rgba(0, 0, 0, 0.2); /* Ajustado para escuro */
+  --neumorphic-shadow: -5px -5px 10px var(--shadow-light), 5px 5px 10px var(--shadow-dark);
+  --neumorphic-inset-shadow: inset -3px -3px 7px var(--shadow-light), inset 3px 3px 7px var(--shadow-dark);
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  width: 100%;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--neumorphic-shadow);
+  padding: 50px;
+  box-sizing: border-box;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 25px;
+}
+
+header img {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+}
+
+header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+}
+
+section {
+  margin-bottom: 50px;
+}
+
+section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+section p {
+  color: var(--color-text-dark);
+  line-height: 1.6;
+  margin-top: 0;
+  margin-bottom: 25px;
+  max-width: 600px;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 50px 0;
+}
+
+.social-login-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 350px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  background-color: var(--background-color);
+  box-shadow: var(--neumorphic-shadow);
+}
+
+.social-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: -2px -2px 5px var(--shadow-light), 2px 2px 5px var(--shadow-dark);
+}
+
+.social-btn img {
+  width: 24px;
+  height: 24px;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+input[type="text"], input[type="password"] {
+  width: 100%;
+  max-width: 350px;
+  padding: 15px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  box-sizing: border-box;
+  background-color: var(--background-color);
+  box-shadow: var(--neumorphic-inset-shadow);
+  color: var(--color-text-dark);
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+  box-shadow: inset -2px -2px 5px var(--shadow-light), inset 2px 2px 5px var(--shadow-dark), 0 0 0 2px var(--primary-color);
+  outline: none;
+}
+
+button {
+  padding: 15px 25px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  background-color: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--neumorphic-shadow);
+}
+
+button:hover {
+  background-color: var(--color-secondary);
+  transform: translateY(-2px);
+}
+
+.error-message {
+  color: var(--error-color);
+  margin-top: 15px;
+  font-weight: 500;
+}
+
+.success-message {
+  color: var(--success-color);
+  margin-top: 15px;
+  font-weight: 500;
+}

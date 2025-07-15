@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function () {
     // --- DOM ELEMENTS ---
     const loginScreen = document.getElementById('login-screen');
@@ -223,7 +222,82 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // ... (todos os outros event listeners para os agentes)
+    // Post Scheduler
+    const schedulePostBtn = document.getElementById('schedule-post');
+    const scheduleContent = document.getElementById('schedule-content');
+    const schedulePlatform = document.getElementById('schedule-platform');
+    const scheduleTime = document.getElementById('schedule-time');
+    const scheduleStatusOutput = document.getElementById('schedule-status-output');
+
+    schedulePostBtn.addEventListener('click', async () => {
+        const content = scheduleContent.value;
+        const platform = schedulePlatform.value;
+        const scheduleDateTime = scheduleTime.value;
+
+        if (!content || !scheduleDateTime) {
+            scheduleStatusOutput.textContent = "Please provide content and a schedule time.";
+            return;
+        }
+
+        setLoading(schedulePostBtn, true);
+        scheduleStatusOutput.textContent = "Scheduling post...";
+
+        try {
+            const response = await chrome.runtime.sendMessage({
+                action: 'schedulePost',
+                content,
+                platform,
+                scheduleDateTime
+            });
+
+            if (response.success) {
+                scheduleStatusOutput.textContent = `Post scheduled successfully on ${platform}!`;
+            } else {
+                scheduleStatusOutput.textContent = `Error scheduling post: ${response.message}`;
+            }
+        } catch (error) {
+            scheduleStatusOutput.textContent = `Error: ${error.message}`;
+        }
+        setLoading(schedulePostBtn, false);
+    });
+
+    // Analytics
+    const fetchEngagementBtn = document.getElementById('fetch-engagement');
+    const engagementOutput = document.getElementById('engagement-output');
+    const fetchBestTimesBtn = document.getElementById('fetch-best-times');
+    const bestTimesOutput = document.getElementById('best-times-output');
+
+    fetchEngagementBtn.addEventListener('click', async () => {
+        setLoading(fetchEngagementBtn, true);
+        engagementOutput.textContent = "Fetching engagement metrics...";
+        try {
+            const response = await chrome.runtime.sendMessage({ action: 'fetchEngagementMetrics' });
+            if (response.success) {
+                engagementOutput.textContent = JSON.stringify(response.data, null, 2);
+            } else {
+                engagementOutput.textContent = `Error: ${response.message}`;
+            }
+        } catch (error) {
+            engagementOutput.textContent = `Error: ${error.message}`;
+        }
+        setLoading(fetchEngagementBtn, false);
+    });
+
+    fetchBestTimesBtn.addEventListener('click', async () => {
+        setLoading(fetchBestTimesBtn, true);
+        bestTimesOutput.textContent = "Fetching best post times...";
+        try {
+            const response = await chrome.runtime.sendMessage({ action: 'fetchBestPostTimes' });
+            if (response.success) {
+                bestTimesOutput.textContent = JSON.stringify(response.data, null, 2);
+            } else {
+                bestTimesOutput.textContent = `Error: ${response.message}`;
+            }
+        } catch (error) {
+            bestTimesOutput.textContent = `Error: ${error.message}`;
+        }
+        setLoading(fetchBestTimesBtn, false);
+    });
 
     // Inicia a aplicação
     initializeApp();

@@ -101,27 +101,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ success: true, data: { monday: '10:00 AM', tuesday: '11:30 AM', wednesday: '09:00 AM' } });
     }, 1000);
     return true; // Indicates that sendResponse will be called asynchronously
-  } else if (request.action === 'fetchApiUsage') {
-    // Simulate fetching API usage
-    console.log("Simulating fetching API usage...");
-    setTimeout(() => {
-      sendResponse({ success: true, data: { openai_calls: 1500, another_ai_calls: 750, total_cost: '$15.75' } });
-    }, 1000);
-    return true; // Indicates that sendResponse will be called asynchronously
-  } else if (request.action === 'fetchApiKeys') {
-    // Fetch API keys from storage
-    console.log("Fetching API keys from storage...");
-    chrome.storage.sync.get(['openai_api_key', 'another_ai_api_key'], (result) => {
-      sendResponse({ success: true, data: result });
-    });
-    return true; // Indicates that sendResponse will be called asynchronously
-  } else if (request.action === 'fetchLogs') {
-    // Simulate fetching logs
-    console.log("Simulating fetching logs...");
-    setTimeout(() => {
-      sendResponse({ success: true, data: ["Log entry 1", "Log entry 2", "Log entry 3"] });
-    }, 1000);
-    return true; // Indicates that sendResponse will be called asynchronously
   }
 });
 

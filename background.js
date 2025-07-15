@@ -11,11 +11,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           files: ['content.js']
         }, () => {
           if (chrome.runtime.lastError) {
-            sendResponse({ success: false, message: `Script injection failed: ${chrome.runtime.lastError.message}` });
+            const errorMessage = `Script injection failed: ${chrome.runtime.lastError.message}`;
+            console.error("MonsterApp Background Error:", errorMessage);
+            sendResponse({ success: false, message: errorMessage });
             return;
           }
           // Now send the message to the content script
           chrome.tabs.sendMessage(tabId, request, (response) => {
+            if (chrome.runtime.lastError) {
+              const errorMessage = `Error sending message to content script: ${chrome.runtime.lastError.message}`;
+              console.error("MonsterApp Background Error:", errorMessage);
+              sendResponse({ success: false, message: errorMessage });
+              return;
+            }
             sendResponse(response); // Send content script's response back to popup.js
           });
         });
@@ -35,7 +43,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // You need to enable Google Sign-In for Chrome Extensions in Google Cloud Console
         // and add "https://<YOUR_EXTENSION_ID>.chromiumapp.org" as an authorized redirect URI.
         // Also, add "identity" permission to manifest.json
-        authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com&response_type=token&scope=email%20profile&redirect_uri=${encodeURIComponent(redirectUri)}`;
+        authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=476275454979-s2im0dskc3qoigf3fjie4763pu53qcgi.apps.googleusercontent.com&response_type=token&scope=email%20profile&redirect_uri=${encodeURIComponent(redirectUri)}`;
         break;
       case 'facebook':
         // You need to set up a Facebook App and configure the OAuth redirect URI

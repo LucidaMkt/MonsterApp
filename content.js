@@ -11,6 +11,21 @@ function detectPlatform() {
   return null;
 }
 
+// Helper function to extract emojis from a string
+function extractEmojis(text) {
+  // Regex to match most common emojis
+  const emojiRegex = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g;
+  const matches = text.match(emojiRegex);
+  return matches ? [...new Set(matches)] : []; // Return unique emojis
+}
+
+// Helper function to extract hashtags from a string
+function extractHashtags(text) {
+  const hashtagRegex = /#(\w+)/g;
+  const matches = text.match(hashtagRegex);
+  return matches ? [...new Set(matches.map(tag => tag.toLowerCase()))] : []; // Return unique, lowercase hashtags
+}
+
 // Function to extract Instagram profile data
 function extractInstagramProfileData() {
   let username = '';
@@ -19,48 +34,57 @@ function extractInstagramProfileData() {
   let followers = 'N/A';
   let following = 'N/A';
   const recentPosts = [];
+  let allExtractedEmojis = [];
+  let allExtractedHashtags = [];
 
   try {
-    const header = document.querySelector('header');
-    if (!header) throw new Error("Instagram profile header not found.");
-
-    // Username
-    const usernameElement = header.querySelector('h2');
-    if (usernameElement) {
-      username = usernameElement.textContent;
+    // Find the username element first, as it's usually stable
+    const usernameSpan = document.querySelector('h2 span.xlyipyv');
+    if (usernameSpan) {
+      username = usernameSpan.textContent;
+    } else {
+      throw new Error("Instagram username element not found.");
     }
 
-    // Bio - This selector is volatile and may need updates if Instagram changes its layout.
-    // It targets the div that usually contains the bio text, often identified by a test id.
-    const bioElement = document.querySelector('div[data-testid="UserDescription"]');
-    if (bioElement) {
-        bio = bioElement.textContent.trim();
-    } else {
-        // Fallback for older or different layouts where the bio is near the user's name (h1)
-        const h1_bio = header.querySelector('h1');
-        if(h1_bio && h1_bio.parentElement) {
-            // Attempt to get sibling text content which forms the bio
-            let bioText = '';
-            let nextSibling = h1_bio.nextElementSibling;
-            if (nextSibling) bioText = nextSibling.textContent.trim();
-            bio = bioText;
+    // Find the main header section by looking for a parent of the username element
+    let profileHeaderSection = usernameSpan.closest('header');
+    if (!profileHeaderSection) {
+        throw new Error("Instagram profile header section not found via username.");
+    }
+
+    // Bio
+    // Look for the bio within a section that contains the username and other profile details
+    const bioSection = profileHeaderSection.nextElementSibling; // Assuming bio section is next sibling
+    if (bioSection) {
+        const bioSpan = bioSection.querySelector('span[dir="auto"]');
+        if (bioSpan) {
+            bio = bioSpan.innerText.trim();
+        }
+    }
+    allExtractedEmojis = allExtractedEmojis.concat(extractEmojis(bio));
+    allExtractedHashtags = allExtractedHashtags.concat(extractHashtags(bio));
+
+    // Posts, Followers, Following
+    // These are typically in a ul within a section after the main header
+    const countsList = document.querySelector('section ul.x78zum5.x1q0g3np.xieb3on');
+    if (countsList) {
+        const countItems = countsList.querySelectorAll('li span.html-span');
+        if (countItems.length >= 3) {
+            posts = countItems[0].textContent;
+            followers = countItems[1].textContent;
+            following = countItems[2].textContent;
         }
     }
 
-    // Posts, Followers, Following
-    const counts = document.querySelectorAll('header ul li span');
-    if (counts.length >= 3) {
-      posts = counts[0].querySelector('span') ? counts[0].querySelector('span').textContent : counts[0].textContent;
-      followers = counts[1].querySelector('span') ? counts[1].querySelector('span').textContent : counts[1].textContent;
-      following = counts[2].querySelector('span') ? counts[2].querySelector('span').textContent : counts[2].textContent;
-    }
-
-    // Recent Posts (images/videos)
+    // Recent Posts (images/videos) and their captions (if available)
     const postLinks = document.querySelectorAll('article a[href^="/p/"]');
     for (let i = 0; i < Math.min(postLinks.length, 9); i++) { // Get up to 9 recent posts
       const img = postLinks[i].querySelector('img');
       if (img && img.src) {
         recentPosts.push(img.src);
+        // TODO: Implement extraction of post captions here if needed for more detailed analysis
+        // This would require navigating to the post page or finding the caption element on the profile page.
+        // For now, emojis and hashtags are primarily extracted from the bio.
       }
     }
 
@@ -75,7 +99,9 @@ function extractInstagramProfileData() {
     posts: posts,
     followers: followers,
     following: following,
-    recent_posts: recentPosts
+    recent_posts: recentPosts,
+    extracted_emojis: [...new Set(allExtractedEmojis)], // Ensure unique emojis across all sources
+    extracted_hashtags: [...new Set(allExtractedHashtags)] // Ensure unique hashtags across all sources
   };
 }
 
@@ -85,6 +111,8 @@ function extractFacebookProfileData() {
   let bio = '';
   let followers = 'N/A';
   let friends = 'N/A'; // Facebook uses 'friends' instead of 'following' for personal profiles
+  let allExtractedEmojis = [];
+  let allExtractedHashtags = [];
 
   try {
     // Attempt to get username from the main profile header
@@ -111,6 +139,8 @@ function extractFacebookProfileData() {
         if (bioText) bio = bioText.trim();
       }
     }
+    allExtractedEmojis = allExtractedEmojis.concat(extractEmojis(bio));
+    allExtractedHashtags = allExtractedHashtags.concat(extractHashtags(bio));
 
     // Followers/Friends - Also highly variable.
     // Look for elements containing "followers" or "friends" text.
@@ -134,7 +164,9 @@ function extractFacebookProfileData() {
     bio: bio,
     followers: followers,
     friends: friends,
-    posts: 'N/A' // Facebook doesn't expose a simple post count like Instagram
+    posts: 'N/A', // Facebook doesn't expose a simple post count like Instagram
+    extracted_emojis: [...new Set(allExtractedEmojis)],
+    extracted_hashtags: [...new Set(allExtractedHashtags)]
   };
 }
 

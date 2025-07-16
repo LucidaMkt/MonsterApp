@@ -120,7 +120,20 @@ class TokenData(BaseModel):
 class GoogleLoginRequest(BaseModel):
     token: str # O token ID do Google
 
-# ... (outros modelos Pydantic que já tínhamos)
+class GenerateCopyRequest(BaseModel):
+    prompt: str
+    tone: str
+    niche: Optional[str] = None
+    profile_data: Optional[dict] = None
+
+class HashtagResearchRequest(BaseModel):
+    topic: str
+    niche: Optional[str] = None
+    profile_data: Optional[dict] = None
+
+class GenerateImageRequest(BaseModel):
+    prompt: str
+    style: str
 
 # --- Funções de Autenticação ---
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -139,7 +152,31 @@ app = FastAPI(
     description="Backend para a extensão MonsterApp com autenticação e agentes de IA.",
     version="3.0.0"
 )
-# ... (configuração do CORS existente) ...
+
+# Configuração do CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir todas as origens por enquanto, ajustar para produção
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Configuração das APIs de IA ---
+# Carrega as variáveis de ambiente do arquivo .env
+from dotenv import load_dotenv
+load_dotenv()
+
+# Configuração da API Gemini
+import google.generativeai as genai
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Configuração da API OpenAI
+from openai import OpenAI
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Configuração do Stripe
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # --- Endpoints de Autenticação e Usuário ---
 @app.post("/auth/google", tags=["Authentication"])
@@ -205,28 +242,6 @@ class GenerateCopyVariationsRequest(BaseModel):
 async def read_users_me(current_user: User = Depends(get_current_user)):
     """Retorna os dados do usuário logado."""
     return current_user
-
-@app.post("/create-checkout-session", tags=["Stripe"])
-async def create_checkout_session(request: StripeCheckoutRequest, current_user: User = Depends(get_current_user)):
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            line_items=[
-                {
-                    'price': request.price_id,
-                    'quantity': 1,
-                },
-            ],
-            mode='subscription',
-            success_url=request.success_url,
-            cancel_url=request.cancel_url,
-            customer_email=current_user.email, # Preenche o email do cliente
-            client_reference_id=str(current_user.id) # Referência para o seu usuário
-        )
-        return {"checkout_url": checkout_session.url}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao criar sessão de checkout: {str(e)}")
-
-# --- Endpoints dos Agentes de IA (Protegidos) ---
 
 @app.post("/create-checkout-session", tags=["Stripe"])
 async def create_checkout_session(request: StripeCheckoutRequest, current_user: User = Depends(get_current_user)):

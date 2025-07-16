@@ -1,9 +1,22 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // --- STATE MANAGEMENT ---
+    const appState = {
+        apiUrl: '', // Será preenchido a partir do storage
+        authToken: '',
+        profileAnalysis: null,
+        generatedContent: '',
+        isLoading: false,
+    };
+
     // --- DOM ELEMENTS ---
     const loginScreen = document.getElementById('login-screen');
     const mainContent = document.getElementById('main-content');
     const loginButton = document.getElementById('login-with-google-btn');
     const upgradeProBtn = document.getElementById('upgrade-pro-btn');
+
+    const navButtons = document.querySelectorAll('.nav-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const settingsBtn = document.getElementById('settings-btn');
 
     // Abas e Botões
     const analyzeProfileBtn = document.getElementById('analyze-profile');
@@ -11,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const generateImageBtn = document.getElementById('generate-image');
     const researchHashtagsBtn = document.getElementById('research-hashtags-btn');
     const suggestTopicsBtn = document.getElementById('suggest-topics-btn');
+    const generateVariationsBtn = document.getElementById('generate-variations-btn'); // Moved here
 
     // Saídas e Entradas
     const profileAnalysisOutput = document.getElementById('profile-analysis-output');
@@ -33,24 +47,96 @@ document.addEventListener('DOMContentLoaded', function () {
     const analyzeCompetitorBtn = document.getElementById('analyze-competitor-btn');
     const competitorAnalysisOutput = document.getElementById('competitor-analysis-output');
 
+    // Post Scheduler
+    const schedulePostBtn = document.getElementById('schedule-post');
+    const scheduleContent = document.getElementById('schedule-content');
+    const schedulePlatform = document.getElementById('schedule-platform');
+    const scheduleTime = document.getElementById('schedule-time');
+    const scheduleStatusOutput = document.getElementById('schedule-status-output');
+
+    // Analytics
+    const fetchEngagementBtn = document.getElementById('fetch-engagement');
+    const engagementOutput = document.getElementById('engagement-output');
+    const fetchBestTimesBtn = document.getElementById('fetch-best-times');
+    const bestTimesOutput = document.getElementById('best-times-output');
+
+
+    // --- HELPER FUNCTIONS ---
+    const setLoading = (button, isLoading) => {
+        appState.isLoading = isLoading;
+        if (button) {
+            button.disabled = isLoading;
+            if (isLoading) {
+                button.dataset.originalText = button.innerHTML;
+                button.innerHTML = '<span class="loader"></span>';
+            } else {
+                button.innerHTML = button.dataset.originalText;
+            }
+        }
+    };
+
+    const navigateToTab = (tabName) => {
+        navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabName));
+        tabContents.forEach(content => content.classList.toggle('active', content.id === tabName));
+    };
+
+    const showLoginScreen = () => {
+        loginScreen.style.display = 'block';
+        mainContent.style.display = 'none';
+    };
+
+    const showMainContent = () => {
+        loginScreen.style.display = 'none';
+        mainContent.style.display = 'block';
+        // Aqui você pode carregar os dados do usuário, etc.
+    };
+
+    const getApiUrl = () => {
+        return new Promise(resolve => {
+            chrome.storage.local.get('api_url', result => resolve(result.api_url || 'https://monsterapp-backend.onrender.com'));
+        });
+    };
+
+    const callApi = async (endpoint, body, buttonToLoad) => {
+        setLoading(buttonToLoad, true);
+        try {
+            const apiUrl = appState.apiUrl;
+            if (!apiUrl) {
+                throw new Error("API URL não configurada. Recarregue a extensão.");
+            }
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (appState.authToken) {
+                headers['Authorization'] = `Bearer ${appState.authToken}`;
+            }
+
+            const response = await fetch(`${apiUrl}${endpoint}`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(body),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } finally {
+            setLoading(buttonToLoad, false);
+        }
+    };
+
     // --- AUTHENTICATION LOGIC ---
     const handleLogin = () => {
         chrome.runtime.sendMessage({ action: 'initiateOAuth', platform: 'google' }, async (response) => {
             if (response && response.success) {
                 // O background script nos deu o token do Google. Agora, enviamos para o nosso backend.
                 try {
-                    const headers = {
-        'Content-Type': 'application/json',
-      };
-      if (appState.authToken) {
-        headers['Authorization'] = `Bearer ${appState.authToken}`;
-      }
-
-      const response = await fetch(`${apiUrl}${endpoint}`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(body),
-      });
+                    const backendResponse = await fetch(`${appState.apiUrl}/auth/google`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: response.token })
+                    });
                     const data = await backendResponse.json();
                     if (data.access_token) {
                         // Login bem-sucedido! Salva nosso token de API e atualiza a UI.
@@ -72,23 +158,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    const showLoginScreen = () => {
-        loginScreen.style.display = 'block';
-        mainContent.style.display = 'none';
-    };
-
-    const showMainContent = () => {
-        loginScreen.style.display = 'none';
-        mainContent.style.display = 'block';
-        // Aqui você pode carregar os dados do usuário, etc.
-    };
-
     // --- INITIALIZATION ---
     const initializeApp = async () => {
         // 1. Pega a URL da API (desenvolvimento ou produção)
-        appState.apiUrl = await new Promise(resolve => {
-            chrome.storage.local.get('api_url', result => resolve(result.api_url || 'https://monsterapp-backend.onrender.com'));
-        });
+        appState.apiUrl = await getApiUrl();
+        console.log("API URL a ser usada:", appState.apiUrl);
 
         // 2. Verifica se já temos um token de autenticação
         chrome.storage.local.get('authToken', (result) => {
